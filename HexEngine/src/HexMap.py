@@ -41,7 +41,6 @@ class Map:
                 n = 0 
                 element = line.split(',')
                 while n <= self.x:#dummy row
-                    print n
                     if n == 0:
                         self.tiles[count-1][n] = Tile(n,count-1,99,self)#dummy
                     else:
@@ -403,9 +402,6 @@ class Map:
             
         rtrList.append((1,(cur1.x,cur1.y)))
         return rtrList
-
-
-        
 
 class Tile:
     def __init__(self,x,y,typ,map):
