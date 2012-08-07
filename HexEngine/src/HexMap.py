@@ -341,10 +341,7 @@ class Map:
                         rtrOpacity += self.InterpolateOpacity(Pos,element,tile[1],tile[2])
             ReturnList.append((tile[1],rtrOpacity))
         print ReturnList   
-        
-    def getFovC(self,Pos):
-        mFieldOfView = FieldOfViewGrid(self,self.getTile(Pos))
-                   
+                          
     def InterpolateOpacity(self,Start,End,Tile1,Tile2):
         start = self.getTile(Start).center
         end = self.getTile(End).center
@@ -531,177 +528,42 @@ class Cache: #return of the chache
                     self.nodes[y][x] = self.map.intersectingline(startNode,endNode)            
                 x+=1
             y+=1
+            
                     
     def getPath(self,startPos,endPos):
         ReturnList = []
+        #move on to right for offset
+        startPos = (startPos[0]+1,startPos[1])
+        endPos = (endPos[0]+1,endPos[1])
+
         #convert to hex coord for easier calculation
         startPos = HexMath.convertArrayToHex(startPos[0],startPos[1])
         endPos = HexMath.convertArrayToHex(endPos[0],endPos[1]) 
+  
         #get end pos adjusted for offset (startPos)
         mEndPos = (endPos[0]-startPos[0],endPos[1]-startPos[1])
         #convert to array
         mEndPosarray = HexMath.convertHexToArray(mEndPos[0], mEndPos[1])
         #get path
-        Path = self.nodes[mEndPosarray[1]][mEndPosarray[0]]
+        Path = self.nodes[mEndPosarray[1]][mEndPosarray[0]+1]#+1 for offset
         #adjust for offset
         for Node in Path:
             if Node[0] == 1:
                 mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0] + startPos[0],mNode[1] + startPos[1])
+                mNode = (mNode[0],mNode[1])
                 mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
+                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
                 ReturnList.append((1,mNode))
+            if Node[0] == 2:
+                mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
+                mNode = (mNode[0],mNode[1])
+                mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
+                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
+                #second
+                mNode2 = HexMath.convertArrayToHex(Node[2][0],Node[2][1])
+                mNode2 = (mNode2[0],mNode2[1])
+                mNode2 = HexMath.convertHexToArray(mNode2[0],mNode2[1])
+                mNode2 = (mNode2[0]+(startPos[0]-2),mNode2[1])
+                ReturnList.append((2,mNode,mNode2))
         print ReturnList
 
-    
-class Arc: # class for FieldOfView Calculation 
-    def __init__(self,Grid,startHexPol,endHexPol,cArm,ccArm):
-        self.grid = Grid
-        self.startHex = startHexPol #int
-        self.endHex = endHexPol #int
-        self.cArm = cArm # most clockwise Arm
-        self.ccArm = ccArm  # most counterclockwise Arm
-     
-    def euclideanDistance2(self,x1,y1,x2,y2):
-        return ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))   
-        
-    def contractC(self,hex):
-        print "ContractC"
-    def contractCC(self,hex):
-        print "ContractCC"
-    def breakArc(self):#break up the arc according to any obstacels
-        i = self.startHex
-        
-        #contract most clockwise end
-        while i <= self.endHex:
-            h = self.grid.HexOnCircel(i)
-            if h == None or h.typ == 1: # for now work with type 1 = open, might change
-                break
-            self.contractC(h)
-            i+=1
-            
-        #conctract most counter clockwise end
-        i = self.endHex
-        while i >= self.startHex:
-            h = self.grid.HexOnCircel(i)
-            if h == None or h.typ == 1:# for now work with type 1 = open, might change
-                break
-            self.contractCC(h)
-            i-=1
-        if self.emptyArc(): #no arc left
-            return None
-        #run to interior points
-        i = self.startHex +1
-        while i < self.endHex:
-            h = self.grid.HexOnCircel(i)
-            if h == None and h.typ != 1: #obstacle
-                cArm =(h.pointlist[2][0],h.pointlist[2][1])
-                a = Arc(self.Grid,i+1,self.endHex,cArm,self.ccArm)
-                self.endHex-= 1
-                a.contractC(h)
-                self.contractCC(h)
-                
-                if a.emptyArc() == False:
-                    #put a into list after self
-                    n = self.grid.ArcList.index(self)
-                    self.grid.ArcList.insert(n+1, a)#inserts before n, so +1
-                    a.breakArc()
-            i+=1
-        
-        if self.emptyArc():
-            return a
-        print "foo"
-        return self
-        
-            
-    def emptyArc(self):
-        if self.startHex > self.endHex or HexMath.turns(self.grid.centerHex.center[0],self.grid.centerHex.center[1], 
-                                                        self.cArm[0],self.cArm[1],self.ccArm[0],self.ccArm[1]) != -1: # right
-            return True
-        #also purge very thin arms
-        b2 = self.euclideanDistance2(self.grid.centerHex.center[0],self.grid.centerHex.center[1], self.cArm[0],self.cArm[1])
-        c2 = self.euclideanDistance2(self.grid.centerHex.center[0],self.grid.centerHex.center[1], self.ccArm[0],self.ccArm[1])
-        a2 = self.euclideanDistance2(self.cArm[0],self.cArm[1], self.ccArm[0],self.ccArm[1])
-        d = math.sqrt(b2) * math.sqrt(c2) * 2
-        if d == 0: #degenerate case--an arm lies on the centre
-            return True
-        cosA = (b2 + c2 - a2)/d
-        if cosA > 0.99999998:
-            return True
-        return False
-    
-    def expandArc(self,HexGrid,r):
-        d = hs/r
-        e = hs%r
-        #new starting hex(newwhs)
-        if e == 0 and (d == 0 or  3): #hack to ensure arcs are <= pi rads
-            newhs = d*(r+1)
-        else:
-            if e != 0:
-                newhs = d*(r+1) + e+1
-            else:
-                newhs = d*(r+1)+1
-        
-        if self.ccArm[1] <= self.centerHex.center[1] and self.cArm[1] <= self.centerHex.center[1]:
-            istop = True
-        else:
-            istop = False
-        
-        if istop:
-            while newhs >0:
-                pass
-                #grid hexOnCircel
-class FieldOfViewGrid:
-    def __init__(self,map,centerHex): 
-        self.map = map
-        self.centerHex = centerHex
-        self.ArcList = []   
-        self.radius = 0
-        self.dirs = [(0,-1),(-1,-1),(-1,0),(0,1),(1,1),(1,0)]
-         
-        self.initArcs()  
-        self.nextArc()
-        
-        
-              
-    def initArcs(self):
-        #        |
-        # Arc II | Arc I 
-        #--------c-------
-        #Arc III | Arc IV
-        #        |  
-        cArm = (self.centerHex.pointlist[2][0],self.centerHex.center[1])
-        ccArm = (self.centerHex.center[0],self.centerHex.pointlist[0][1])
-        self.ArcList.append(Arc(self,0,1,cArm,ccArm))  
-         
-        cArm = (self.centerHex.center[0],self.centerHex.pointlist[0][1])
-        ccArm = (self.centerHex.pointlist[5][0],self.centerHex.center[1])
-        self.ArcList.append(Arc(self,2,3,cArm,ccArm))
-        
-        cArm = (self.centerHex.pointlist[5][0],self.centerHex.center[1])
-        ccArm = (self.centerHex.center[0],self.centerHex.pointlist[3][1])
-        self.ArcList.append(Arc(self,3,4,cArm,ccArm))
-        
-        cArm = (self.centerHex.center[0],self.centerHex.pointlist[3][1])
-        ccArm = (self.centerHex.pointlist[2][0],self.centerHex.center[1])
-        self.ArcList.append(Arc(self,5,6,cArm,ccArm))
-                     
-    def nextArc(self): #main function!
-        self.radius+=1
-        #marc all hex in the current arc as visible
-        for Arc in self.ArcList:
-            Arc.breakArc()
-    
-    def HexOnCircel(self,int): #hex are orderd by counterclockwise indexing, returns the hexagon or none
-        d = (int/self.radius)%6 #find out side
-        e = int%self.radius
-        x = self.centerHex.hX + self.radius * (self.dirs[(d+4)%6][0])
-        y = self.centerHex.hY + self.radius * (self.dirs[(d+4)%6][1])
-        x += e * self.dirs[d][0]
-        y += e * self.dirs[d][1]
-        x,y = HexMath.convertHexToArray(x,y)
-        #check if in grid
-        if HexMath.checkInGrid(x, y, self.map.x, self.map.y):
-            return self.map.getTile((x,y))
-        else:
-            return None #outside of grid
-                        

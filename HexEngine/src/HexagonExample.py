@@ -138,7 +138,7 @@ class HexagonExample:
                     elif event.key == K_SPACE:
 
                         #tStart = time.clock()
-                        self.mMap.cache.getPath((0,0),(0,4))
+                        self.mMap.cache.getPath((4,0),(5,1))
                         #print time.clock() - tStart
                         
                 elif event.type == MOUSEMOTION:
