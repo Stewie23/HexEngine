@@ -137,10 +137,10 @@ class HexagonExample:
                         return                
                     elif event.key == K_SPACE:
 
-                        #tStart = time.clock()
-                        self.mMap.cache.getPath((0,0),(3,2))
-                        #print time.clock() - tStart
-                        
+                        self.mMap.cache.getCachedLineIntersections((0,0),(3,2))
+                        print "-----------------------------------------------"
+                        self.mMap.cache.getCachedLineIntersections((0,1),(0,5))
+                        print "-----------------------------------------------"
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
     
