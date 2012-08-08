@@ -536,13 +536,13 @@ class Cache: #return of the chache
         
         if startPos[1] == endPos[1]:
             if startPos[0] < endPos[0]:
-                print "up right"
-                return 3
+                print "up right I"
+                return 5
             if startPos[0] > endPos[0]:
-                print "down left"
-                return 4
+                print "down left I"
+                return 6
             
-        if startPos[0] < endPos[0] and startPos[1] < endPos[1]:
+        if startPos[0] <= endPos[0] and startPos[1] <= endPos[1]:
             #could be right, down right or up right 
             if endPos[0] - startPos[0] <= endPos[1] - startPos[1]:
                 print "down right or right"
@@ -551,7 +551,7 @@ class Cache: #return of the chache
                 print "up right"
                 return 3
                 
-        if startPos[0] > endPos[0] and startPos[1] > endPos[1]:
+        if startPos[0] >= endPos[0] and startPos[1] >= endPos[1]:
             #could be left,down left or up left
             if endPos[0] - startPos[0]< endPos[1] - startPos[1]:
                 print "down left"
@@ -578,12 +578,21 @@ class Cache: #return of the chache
         dx = 0
         dy = 0
         #if direction == 2,swap start and endPos
-        if direction == 2:
+        if direction == 2 or direction ==4 or direction ==6:
             startPos,endPos = endPos,startPos
-        elif direction == 3 or direction == 4:
+            
+        if direction == 3 or direction == 4:
             dx = endPos[0] - startPos[0]
             dy = endPos[1] - startPos[1]
             endPos = (startPos[0] + dy,startPos[1] +dx)#swap dx and dy
+            
+        if direction == 5 or direction == 6:
+            dx = endPos[0] - startPos[0]
+            endPos = (startPos[0],startPos[1]+dx)
+
+        
+            
+            
         #get end pos adjusted for offset (startPos)    
         mEndPos = (endPos[0]-startPos[0],endPos[1]-startPos[1])
         #convert to array    
@@ -594,16 +603,17 @@ class Cache: #return of the chache
 
         for i,Node in enumerate(Path):
             my = dy * i
-            mx = dx * i
             if Node[0] == 1:
                 mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
                 mNode = (mNode[0]+ (startPos[0]-1),mNode[1] + (startPos[1] -1))
+                if direction ==5 or direction ==6: #cant happen with two nodes
+                    mNode = (mNode[0]+i,mNode[1]-i)
                 mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
                 mNode = (mNode[0]-1,mNode[1]-my)
                 ReturnList.append((1,mNode))
             if Node[0] == 2:
                 mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0]+ (startPos[0]-1),mNode[1]+ (startPos[1]-1))
+                mNode = (mNode[0]+ (-1),mNode[1]+ (startPos[1]-1))
                 mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
                 mNode = (mNode[0]-1,mNode[1]-my)
                 #second
@@ -613,7 +623,7 @@ class Cache: #return of the chache
                 mNode2 = (mNode2[0]-1,mNode2[1]-my)
                 ReturnList.append((2,mNode,mNode2))
             
-        if direction == 2 or direction == 4:
+        if direction == 2 or direction == 4 or direction ==6:
             ReturnList.reverse()
             
         print ReturnList
