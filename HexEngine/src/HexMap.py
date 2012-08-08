@@ -524,9 +524,44 @@ class Cache: #return of the chache
                     self.nodes[y][x] = self.map.intersectingline(startNode,endNode)            
                 x+=1
             y+=1
+     
+    def getDirecetion(self,startPos,endPos):
+        if startPos[0] > endPos[0] and startPos[1] < endPos[1]:
+            print "down"
+            return 1
+        if startPos[0] < endPos[0] and startPos[1] > endPos[1]:
+            print "up"
+            return 2
             
-                    
-    def getPath(self,startPos,endPos):
+        
+        if startPos[1] == endPos[1]:
+            if startPos[0] < endPos[0]:
+                print "up right"
+                return 3
+            if startPos[0] > endPos[0]:
+                print "down left"
+                return 4
+            
+        if startPos[0] < endPos[0] and startPos[1] < endPos[1]:
+            #could be right, down right or up right 
+            if endPos[0] - startPos[0] <= endPos[1] - startPos[1]:
+                print "down right or right"
+                return 1
+            elif endPos[0] - startPos[0] > endPos[1] - startPos[1]:
+                print "up right"
+                return 3
+                
+        if startPos[0] > endPos[0] and startPos[1] > endPos[1]:
+            #could be left,down left or up left
+            if endPos[0] - startPos[0]< endPos[1] - startPos[1]:
+                print "down left"
+                return 4
+            elif endPos[0]- startPos[0] >= endPos[1] - startPos[1]:
+                print "up left or left"
+                return 2
+
+                
+    def getCachedLineIntersections(self,startPos,endPos):
         ReturnList = []
         #move on to right for offset
         startPos = (startPos[0]+1,startPos[1])
@@ -535,31 +570,51 @@ class Cache: #return of the chache
         #convert to hex coord for easier calculation
         startPos = HexMath.convertArrayToHex(startPos[0],startPos[1])
         endPos = HexMath.convertArrayToHex(endPos[0],endPos[1]) 
-  
-        #get end pos adjusted for offset (startPos)
+        #get direction of line
+        #since the hex tile from where the cached lines are casted is considerd to be the top left hex
+        #there are some cases that need special threadment
+        direction = self.getDirecetion(startPos, endPos)  
+        
+        dx = 0
+        dy = 0
+        #if direction == 2,swap start and endPos
+        if direction == 2:
+            startPos,endPos = endPos,startPos
+        elif direction == 3 or direction == 4:
+            dx = endPos[0] - startPos[0]
+            dy = endPos[1] - startPos[1]
+            endPos = (startPos[0] + dy,startPos[1] +dx)#swap dx and dy
+        #get end pos adjusted for offset (startPos)    
         mEndPos = (endPos[0]-startPos[0],endPos[1]-startPos[1])
-        #convert to array
+        #convert to array    
         mEndPosarray = HexMath.convertHexToArray(mEndPos[0], mEndPos[1])
         #get path
         Path = self.nodes[mEndPosarray[1]][mEndPosarray[0]+1]#+1 for offset
         #adjust for offset
-        for Node in Path:
+
+        for i,Node in enumerate(Path):
+            my = dy * i
+            mx = dx * i
             if Node[0] == 1:
                 mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0],mNode[1])
+                mNode = (mNode[0]+ (startPos[0]-1),mNode[1] + (startPos[1] -1))
                 mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
-                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
+                mNode = (mNode[0]-1,mNode[1]-my)
                 ReturnList.append((1,mNode))
             if Node[0] == 2:
                 mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0],mNode[1])
+                mNode = (mNode[0]+ (startPos[0]-1),mNode[1]+ (startPos[1]-1))
                 mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
-                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
+                mNode = (mNode[0]-1,mNode[1]-my)
                 #second
                 mNode2 = HexMath.convertArrayToHex(Node[2][0],Node[2][1])
-                mNode2 = (mNode2[0],mNode2[1])
+                mNode2 = (mNode2[0]+ (startPos[0]-1),mNode2[1]+ (startPos[1] -1))
                 mNode2 = HexMath.convertHexToArray(mNode2[0],mNode2[1])
-                mNode2 = (mNode2[0]+(startPos[0]-2),mNode2[1])
+                mNode2 = (mNode2[0]-1,mNode2[1]-my)
                 ReturnList.append((2,mNode,mNode2))
+            
+        if direction == 2 or direction == 4:
+            ReturnList.reverse()
+            
         print ReturnList
 
