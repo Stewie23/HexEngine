@@ -49,9 +49,6 @@ class Map:
                     n+=1
             count+= 1
             
-        #build cache
-        self.cache = Cache(self)
-        self.cache.buildCache()
                 
     def calcDimensions(self):
         self.height = int(self.radius * math.sqrt(3))
@@ -421,8 +418,8 @@ class Tile:
         self.center = self.setCenter()
         self.pointlist = self.setPoints()
         self.getCenterInt= (int(self.center[0]),int(self.center[1]))
-        #test for caching intersection
-        self.IntersectionCache = []
+
+
     
   
     def getOpacity(self):
@@ -504,62 +501,5 @@ class node: #class for pathfinding
         dZ =  dY-dX
         return max((dX,dY,dZ))
 
-class Cache: #return of the chache
-    def __init__(self,map):
-        self.map = map
-        self.nodes = []
-        row = [0] * (self.map.y) 
-        for i in range(self.map.x):
-            self.nodes.append(list(row))
-                   
-    def buildCache(self):
-        # need x: -1 line for correct line intersections
-        y = 0
-        startNode = self.map.getTile((1,0))
-        while y < self.map.y:
-            x=0
-            while x < self.map.x:
-                endNode = self.map.getTile((x,y))
-                if endNode != startNode:
-                    self.nodes[y][x] = self.map.intersectingline(startNode,endNode)            
-                x+=1
-            y+=1
-            
-                    
-    def getPath(self,startPos,endPos):
-        ReturnList = []
-        #move on to right for offset
-        startPos = (startPos[0]+1,startPos[1])
-        endPos = (endPos[0]+1,endPos[1])
 
-        #convert to hex coord for easier calculation
-        startPos = HexMath.convertArrayToHex(startPos[0],startPos[1])
-        endPos = HexMath.convertArrayToHex(endPos[0],endPos[1]) 
-  
-        #get end pos adjusted for offset (startPos)
-        mEndPos = (endPos[0]-startPos[0],endPos[1]-startPos[1])
-        #convert to array
-        mEndPosarray = HexMath.convertHexToArray(mEndPos[0], mEndPos[1])
-        #get path
-        Path = self.nodes[mEndPosarray[1]][mEndPosarray[0]+1]#+1 for offset
-        #adjust for offset
-        for Node in Path:
-            if Node[0] == 1:
-                mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0],mNode[1])
-                mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
-                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
-                ReturnList.append((1,mNode))
-            if Node[0] == 2:
-                mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0],mNode[1])
-                mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
-                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
-                #second
-                mNode2 = HexMath.convertArrayToHex(Node[2][0],Node[2][1])
-                mNode2 = (mNode2[0],mNode2[1])
-                mNode2 = HexMath.convertHexToArray(mNode2[0],mNode2[1])
-                mNode2 = (mNode2[0]+(startPos[0]-2),mNode2[1])
-                ReturnList.append((2,mNode,mNode2))
-        print ReturnList
 
