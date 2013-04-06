@@ -21,6 +21,15 @@ def convertHexToArray(x,y):
     returnY = int(y-x)
     return(returnX,returnY)
 
+def getNeighboursB(pos,map):
+    aX = pos[0]
+    aY = pos[1]
+    gridX = map.x
+    gridY = map.y
+    
+
+    return getNeighbours(aX,aY,gridX,gridY)
+
 def getNeighbours(aX,aY,gridX,gridY):
     #get neigbouring hexes
     if aY % 2:

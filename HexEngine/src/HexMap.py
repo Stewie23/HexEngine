@@ -3,11 +3,10 @@ Created on 18.07.2012
 
 @author: benjamin
 '''
-
-from heapq import heappush, heappop
-from operator import itemgetter
 import math
 import HexMath
+
+
 class Map:
     
     def __init__(self):
@@ -48,10 +47,7 @@ class Map:
                         
                     n+=1
             count+= 1
-            
-        #build cache
-        self.cache = Cache(self)
-        self.cache.buildCache()
+
                 
     def calcDimensions(self):
         self.height = int(self.radius * math.sqrt(3))
@@ -163,110 +159,6 @@ class Map:
                     rtrList.append((tile.x,tile.y))
         return rtrList
           
-    def getPath(self,StartPos,GoalPos):#A* Pathfinding 
-        StartPos = (StartPos[0]+1,StartPos[1])#+1 for dummy col
-        dirs = 6
-        dxOdd = [0, 1, 1, 1, 0, -1]
-        dyOdd = [-1, -1, 0, 1, 1,0]
-    
-        dxEven = [-1, 0, 1, 0, -1,-1]
-        dyEven = [-1, -1, 0, 1, 1,0]
-        #way faster then old,but still to slow:)
-        #10x10 - 0.01
-        #20x20 - 0.04
-        #40x40 - 0.38
-        #------------
-        #80x80 - 3.00
-        closedNodes = []
-        openNodes = []
-        dir_map = [] # map of dirs
-        row = [0] * self.y
-        for i in range(self.x): # create 2d arrays
-            closedNodes.append(list(row))
-            openNodes.append(list(row))
-            dir_map.append(list(row))
-        pq = [[], []] # priority queues of open (not-yet-tried) nodes
-        pqi = 0 # priority queue index
-        # create the start node and push into list of open nodes
-        n0 = node(StartPos[0],StartPos[1], 0, 0,0) #no movmentcosts for startnode
-        n0.updatePriority(GoalPos[0],GoalPos[1])
-        heappush(pq[pqi], n0)
-        openNodes[StartPos[1]][StartPos[0]] = n0.priority # mark it on the open nodes map
-        
-        # A* search
-        while len(pq[pqi]) > 0:
-            # get the current node w/ the highest priority
-            # from the list of open nodes
-            n1 = pq[pqi][0] # top node
-            n0 = node(n1.xPos, n1.yPos, n1.distance, n1.priority,self.getTile((n1.xPos,n1.yPos)).typ)
-            x = n0.xPos
-            y = n0.yPos
-            heappop(pq[pqi]) # remove the node from the open list
-            openNodes[y][x] = 0
-            closedNodes[y][x] = 1 # mark it on the closed nodes map
-            
-            if x == GoalPos[0] and y == GoalPos[1]:
-                # generate the path from finish to start
-                # by following the dirs
-                path = []
-                while not (x == StartPos[0] and y == StartPos[1]):
-                    j = dir_map[y][x]
-                    #path.append((x,y))
-                    if y %2:
-                        x += dxOdd[j]
-                        y += dyOdd[j]
-                        path.append((x,y))
-                    else:
-                        x += dxEven[j]
-                        y += dyEven[j]
-                        path.append((x,y))
-                        
-                return path
-            # generate moves (child nodes) in all possible dirs"
-            # hex field madness:)
-            if y %2:
-                dx = dxOdd
-                dy = dyOdd
-            else:
-                dx = dxEven
-                dy = dyEven
-            for i in range(dirs):
-                xdx = x + dx[i]
-                ydy = y + dy[i]
-                #xdx 1 for dummy col
-                if not (xdx < 1 or xdx > self.x-1 or ydy < 0 or ydy > self.y-1 or closedNodes[ydy][xdx] == 1):
-                    # generate a child node
-                    m0 = node(xdx, ydy, n0.distance, n0.priority,self.getTile((xdx,ydy)).typ)
-                    m0.nextMove()
-                    m0.updatePriority(GoalPos[0],GoalPos[1])
-                    if openNodes[ydy][xdx] == 0:
-                        openNodes[ydy][xdx] = m0.priority
-                        heappush(pq[pqi], m0)
-                        # mark its parent node direction
-                        dir_map[ydy][xdx] = (i + dirs / 2) % dirs
-                    elif openNodes[ydy][xdx] > m0.priority:
-                        # update the priority
-                        openNodes[ydy][xdx] = m0.priority
-                        # update the parent direction
-                        dir_map[ydy][xdx] = (i + dirs / 2) % dirs
-                        # replace the node
-                        # by emptying one pq to the other one
-                        # except the node to be replaced will be ignored
-                        # and the new node will be pushed in instead
-                        while not (pq[pqi][0].xPos == xdx and pq[pqi][0].yPos == ydy):
-                            heappush(pq[1 - pqi], pq[pqi][0])
-                            heappop(pq[pqi])
-                        heappop(pq[pqi]) # remove the target node
-                        # empty the larger size priority queue to the smaller one
-                        if len(pq[pqi]) > len(pq[1 - pqi]):
-                            pqi = 1 - pqi
-                        while len(pq[pqi]) > 0:
-                            heappush(pq[1-pqi], pq[pqi][0])
-                            heappop(pq[pqi])       
-                        pqi = 1 - pqi
-                        heappush(pq[pqi], m0) # add the better node instead
-        return '' # if no route found
-      
     def getFov(self,Pos,Range):
         #rather slow lot of overhead,needs to work with 120 tiles
         List = self.getTilesbyDistance(Pos,Range,minDistance=1)
@@ -404,6 +296,22 @@ class Map:
         return rtrList
 
 class Tile:
+    class Property:
+
+        # Possible property values for a node
+        NOTHING = 0
+        BARRIER = 1 
+        START = 2
+        END = 3
+        PATH = 4
+        
+    node_property = None # is this node the start/end/barrier
+    g = None # The current path score for this node
+    h = None # The heuristic guess score for the rest of the path
+    f = None # Combined g and f scores
+    parent = None
+    terrain_score = None
+        
     def __init__(self,x,y,typ,map):
         self.map = map
         #array position
@@ -414,7 +322,6 @@ class Tile:
         self.hX = hPos[0]
         self.hY = hPos[1]
         #typ,for terrain
-        self.typ = typ
         self.opacity = self.getOpacity()
         #calculate dimensions
         #calculate points
@@ -423,17 +330,74 @@ class Tile:
         self.getCenterInt= (int(self.center[0]),int(self.center[1]))
         #test for caching intersection
         self.IntersectionCache = []
+        #
+        self.node_property = self.Property.NOTHING
+        self.set_terrain_score(typ)
+        self.parent = None
+        self.g = 0
+        self.h = 0
+        self.f = 0
+        
+    def is_barrier(self):
+        return self.node_property == self.Node_Property.BARRIER
+
+    def is_end(self):
+        return self.node_property == self.Property.END
+
+    def is_start(self):
+        return self.node_property == self.Property.START
     
-  
+    def set_terrain_score(self,score):
+        if score == 99:
+            self.node_property = self.Property.BARRIER
+        self.terrain_score = score
+            
+    def set_property(self,node_property):
+        self.node_property = node_property
+     
+    def set_parent_and_score(self,parent_pos,parent_g,end_pos):
+        self.set_parent(parent_pos)
+
+        # The cost of previous steps plus one more step
+        self.g = parent_g + self.get_terrain_score()
+
+        # Determine a guess of the remaining distance (H)
+        # This is the "Manhattan" implementation
+        self.h = HexMath.getDistance(parent_pos[0],parent_pos[1], end_pos[0],end_pos[1])
+        
+       
+
+        # Set the new F score
+        self.f = self.g + self.h
+
+    def set_parent(self,parent_pos):
+        self.parent = parent_pos
+
+    def has_better_f_score(self,score):
+        return self.get_f_score < score
+
+    def get_property(self):
+        return self.node_property
+
+    def get_terrain_score(self):
+        return self.terrain_score
+
+    def get_f_score(self):
+        return self.f
+
+    def get_g_score(self):
+        return self.g
+    
     def getOpacity(self):
-        if self.typ == 1:
+        if self.terrain_score == 1:
             return 0.0
-        elif self.typ == 2:
+        elif self.terrain_score == 2:
             return 0.25
-        elif self.typ == 3:
+        elif self.terrain_score == 3:
             return 0.75
         else:
             return 0.0 
+        
     def setCenter(self):#calculate the center pixel of a hex
         if self.y % 2: #ungrade
             x = int((self.x +1) * self.map.height)
@@ -470,96 +434,5 @@ class Tile:
             i += 1
         return rtrList
         
-class node: #class for pathfinding
-    xPos = 0
-    yPos = 0
-    distance = 0
-    priority = 0
-    def __init__(self, xPos, yPos, distance, priority,cost):
-        self.xPos = xPos
-        self.yPos = yPos
-        self.cost = cost
-        self.distance = distance
-        self.priority = priority
-    def __lt__(self,other):
-        return self.priority < other.priority
-    def updatePriority(self, xDest, yDest,H=True):
-        if H == True:
-            self.priority = self.distance + self.estimate(xDest, yDest)  #*n, n >= 1 higher h -> faster search, supoptimal path
-        else:
-            self.priority = self.distance
-            
-        #possible to multiply estimate factor, for faster searching
-        #but route is not optimal
-                                        
-    def nextMove(self):
-        self.distance += self.cost
-    def estimate(self, xDest, yDest):
-        #convert to Hex Coordinate for easier calculation
-        a = HexMath.convertArrayToHex(self.xPos,self.yPos)
-        b = HexMath.convertArrayToHex(xDest,yDest)
-        #calculate differenc beteween x and y values, and between does two
-        dX =  b[0]-a[0]
-        dY =  b[1]-a[1]
-        dZ =  dY-dX
-        return max((dX,dY,dZ))
 
-class Cache: #return of the chache
-    def __init__(self,map):
-        self.map = map
-        self.nodes = []
-        row = [0] * (self.map.y) 
-        for i in range(self.map.x):
-            self.nodes.append(list(row))
-                   
-    def buildCache(self):
-        # need x: -1 line for correct line intersections
-        y = 0
-        startNode = self.map.getTile((1,0))
-        while y < self.map.y:
-            x=0
-            while x < self.map.x:
-                endNode = self.map.getTile((x,y))
-                if endNode != startNode:
-                    self.nodes[y][x] = self.map.intersectingline(startNode,endNode)            
-                x+=1
-            y+=1
-            
-                    
-    def getPath(self,startPos,endPos):
-        ReturnList = []
-        #move on to right for offset
-        startPos = (startPos[0]+1,startPos[1])
-        endPos = (endPos[0]+1,endPos[1])
-
-        #convert to hex coord for easier calculation
-        startPos = HexMath.convertArrayToHex(startPos[0],startPos[1])
-        endPos = HexMath.convertArrayToHex(endPos[0],endPos[1]) 
-  
-        #get end pos adjusted for offset (startPos)
-        mEndPos = (endPos[0]-startPos[0],endPos[1]-startPos[1])
-        #convert to array
-        mEndPosarray = HexMath.convertHexToArray(mEndPos[0], mEndPos[1])
-        #get path
-        Path = self.nodes[mEndPosarray[1]][mEndPosarray[0]+1]#+1 for offset
-        #adjust for offset
-        for Node in Path:
-            if Node[0] == 1:
-                mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0],mNode[1])
-                mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
-                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
-                ReturnList.append((1,mNode))
-            if Node[0] == 2:
-                mNode = HexMath.convertArrayToHex(Node[1][0],Node[1][1])
-                mNode = (mNode[0],mNode[1])
-                mNode = HexMath.convertHexToArray(mNode[0],mNode[1])
-                mNode = (mNode[0]+(startPos[0]-2),mNode[1])
-                #second
-                mNode2 = HexMath.convertArrayToHex(Node[2][0],Node[2][1])
-                mNode2 = (mNode2[0],mNode2[1])
-                mNode2 = HexMath.convertHexToArray(mNode2[0],mNode2[1])
-                mNode2 = (mNode2[0]+(startPos[0]-2),mNode2[1])
-                ReturnList.append((2,mNode,mNode2))
-        print ReturnList
 

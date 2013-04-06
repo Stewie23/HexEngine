@@ -6,6 +6,9 @@ from pygame.locals import *
 import pygame.gfxdraw #we want to be able to use filled polys...
 import cProfile
 
+#stuff for other a*
+from AStar import AStar
+
 class HexagonExample:
          
 
@@ -17,11 +20,11 @@ class HexagonExample:
         color = pygame.Color(250,250, 250, 250) # for lines
         
         bgcolor = None
-        if Tile.typ == 1:
+        if Tile.terrain_score == 1:
             bgcolor = pygame.Color(0,255,0,250)#green
-        if Tile.typ == 2:
+        if Tile.terrain_score == 2:
             bgcolor = pygame.Color(139,90,43,250)#brown
-        if Tile.typ == 3:
+        if Tile.terrain_score == 3:
             bgcolor = pygame.Color(184,184,184,250)#gray
             
         pygame.gfxdraw.filled_polygon(self.mapimg,Tile.pointlist,bgcolor)
@@ -103,7 +106,7 @@ class HexagonExample:
         Setup the screen etc.
         """
         self.screen = pygame.display.set_mode((640, 480),1)
-        pygame.display.set_caption('Press SPACE to toggle the gridRect display')
+        pygame.display.set_caption('HexEngine')
         self.mMap = HexMap.Map()
         self.mMap.LoadMap()
         self.drawMap()        
@@ -113,12 +116,19 @@ class HexagonExample:
         #another surface for pathfinding visualisation
         self.pathfind = pygame.Surface((640,480),SRCALPHA)
         self.highlight.fill((0,0,0,0))
+        #stuff for another a* implementation
+        self.astar = AStar()
                
     def setCursor(self,x,y):
-        self.HighlightHex(HexMath.ScreenToHex(x, y,self.mMap.radius))
-        path = self.mMap.getPath((0,0), HexMath.ScreenToHex(x, y,self.mMap.radius))
-        self.HighlightMutipleHex(path)
-            
+        pass
+        #self.HighlightHex(HexMath.ScreenToHex(x, y,self.mMap.radius))
+        #new a*
+        #path = self.astar.find_path(self.mMap,
+        #                           (0,0),
+        #                           HexMath.ScreenToHex(x, y,self.mMap.radius))
+        
+        #self.HighlightMutipleHex(path)
+          
     def mainLoop(self):    
         pygame.init()    
 
@@ -136,10 +146,11 @@ class HexagonExample:
                     if event.key == K_ESCAPE:
                         return                
                     elif event.key == K_SPACE:
-
-                        #tStart = time.clock()
-                        self.mMap.cache.getPath((0,0),(3,2))
-                        #print time.clock() - tStart
+                        path = self.astar.find_path(self.mMap,
+                                                    (0,0),
+                                                    (38,39))
+                        self.HighlightMutipleHex(path)
+  
                         
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
