@@ -67,7 +67,7 @@ class HexagonExample:
             pointlist = []
             i = 0
             while i <6:
-                pointlist.append((cornerX[i] + PixelX,cornerY[i] + PixelY))
+                pointlist.append((cornerX[i] + PixelX + self.mMap.offsetX,cornerY[i] + PixelY + self.mMap.offsetY))
                 i += 1
             pygame.draw.aalines(self.highlight, color,False, pointlist,1)
     
@@ -94,7 +94,7 @@ class HexagonExample:
                 pointlist = []
                 i = 0
                 while i <6:
-                    pointlist.append((cornerX[i] + PixelX,cornerY[i] + PixelY))
+                    pointlist.append((cornerX[i] + PixelX + self.mMap.offsetX,cornerY[i] + PixelY + self.mMap.offsetY))
                     i += 1
                 pygame.draw.aalines(self.highlight, color,False, pointlist,1)
         
@@ -132,6 +132,26 @@ class HexagonExample:
                 self.mMap.changeRadius(self.mMap.getRadius() - 5)
                 self.drawMap()
       
+    def scroll(self,mousePos):
+        #check if mouse position is on the edge of the screen
+        x = 0
+        y = 0
+        
+        if mousePos[0] /640.0 < 0.05:
+            x = 5
+        if mousePos[0] /640.0 > 0.95:
+            x = -5
+        if mousePos[1] /480.0 < 0.05:
+            y = 5
+        if mousePos[1] /480.0 > 0.95:
+            y = -5
+        
+        if x != 0 or y != 0:
+            self.mMap.changeOffset((x,y))
+            self.drawMap()
+        
+        
+    
     def mainLoop(self):    
         pygame.init()    
 
@@ -152,6 +172,7 @@ class HexagonExample:
                         pass
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
+                    self.scroll(event.pos)
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4 or event.button == 5:
                         self.zoom(event.button)

@@ -19,7 +19,9 @@ class Map:
         self.side  = 0
         self.tiles = [] #two dimensional array storring the tiles
                         #acess is[y][x] 
-        self.cache = None   
+        self.offsetX = 0
+        self.offsetY = 0
+        
                     
     def LoadMap(self):
         #simple load the debug.map and parse it to draw map    
@@ -162,7 +164,10 @@ class Map:
      
     def getRadius(self):
         return self.radius
-         
+       
+    def getOffset(self):
+        return self.offset
+      
     def getPath(self,StartPos,GoalPos):#A* Pathfinding 
         StartPos = (StartPos[0]+1,StartPos[1])#+1 for dummy col
         dirs = 6
@@ -349,7 +354,21 @@ class Map:
         while iX < self.x:
             for iY in range(self.y):
                 self.getTile((iX,iY)).recaluclateDimensions()
-            iX+=1            
+            iX+=1   
+    
+    def changeOffset(self,Offset):
+        self.offsetX += Offset[0]
+        self.offsetY += Offset[1]
+        self.calcDimensions()
+        print (self.offsetX,self.offsetY)
+        #change tiles
+        iX = 1
+        iY = 0      
+        while iX < self.x:
+            for iY in range(self.y):
+                self.getTile((iX,iY)).recaluclateDimensions()
+            iX+=1          
+              
     def InterpolateOpacity(self,Start,End,Tile1,Tile2):
         start = self.getTile(Start).center
         end = self.getTile(End).center
@@ -427,7 +446,6 @@ class Tile:
         self.typ = typ
         self.opacity = self.getOpacity()
         #calculate dimensions
-        #calculate points
         self.center = self.setCenter()
         self.pointlist = self.setPoints()
         self.getCenterInt= (int(self.center[0]),int(self.center[1]))
@@ -446,9 +464,9 @@ class Tile:
         if self.y % 2: #ungrade
             x = int((self.x +1) * self.map.height)
         else: #grade
-            x = int( self.x * self.map.height + self.map.height/2.0)
+            x = int( self.x * self.map.height + self.map.height/2.0) 
             
-        y = int(self.y * self.map.side + self.map.radius)
+        y = int(self.y * self.map.side + self.map.radius) 
         
         return(x,y)
     
@@ -461,7 +479,6 @@ class Tile:
         
         cornerX = [self.map.height/2.0,self.map.height,self.map.height,self.map.height/2.0,0,0]
         cornerY = [0,self.map.radius/2.0,self.map.side,self.map.width,self.map.side,self.map.radius/2.0]
-    
         #offset fuer ungerade 
         if self.y % 2: #ungrade
             PixelX = (self.x+1) * self.map.height - self.map.height/2.0
@@ -474,7 +491,7 @@ class Tile:
         i = 0
         rtrList = []
         while i <6:
-            rtrList.append((int(cornerX[i] + PixelX),cornerY[i] + PixelY))
+            rtrList.append((int(cornerX[i] + PixelX + self.map.offsetX),cornerY[i] + PixelY+ self.map.offsetY))
             i += 1
         return rtrList
  
