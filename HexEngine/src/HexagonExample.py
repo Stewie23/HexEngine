@@ -30,7 +30,7 @@ class HexagonExample:
         #show location in the middel probeblay somehting for debug
         #pygame.draw.circle(self.mapimg,color,Tile.center,2,0)
    
-    def drawMap(self): 
+    def drawMap(self):
         self.mapimg = pygame.Surface((640,480),1)
         self.mapimg= self.mapimg.convert()
         self.mapimg.fill((104,104,104))
@@ -103,7 +103,7 @@ class HexagonExample:
         Setup the screen etc.
         """
         self.screen = pygame.display.set_mode((640, 480),1)
-        pygame.display.set_caption('Press SPACE to toggle the gridRect display')
+        pygame.display.set_caption('HexEngine')
         self.mMap = HexMap.Map()
         self.mMap.LoadMap()
         self.drawMap()        
@@ -116,9 +116,22 @@ class HexagonExample:
                
     def setCursor(self,x,y):
         self.HighlightHex(HexMath.ScreenToHex(x, y,self.mMap.radius))
+        #set screen caption for debug purpose
+        pygame.display.set_caption(str(HexMath.ScreenToHex(x, y,self.mMap.radius)))
+        
         path = self.mMap.getPath((0,0), HexMath.ScreenToHex(x, y,self.mMap.radius))
         self.HighlightMutipleHex(path)
-            
+    
+    def zoom(self,button):
+        #handles zoom button 4 is mousewheel up, button 5 is mousewheel down
+        if button == 4:
+            self.mMap.changeRadius(self.mMap.getRadius() + 5)
+            self.drawMap()
+        if button == 5:
+            if self.mMap.getRadius() -5 > 0: #check so radius is bigger then 0
+                self.mMap.changeRadius(self.mMap.getRadius() - 5)
+                self.drawMap()
+      
     def mainLoop(self):    
         pygame.init()    
 
@@ -136,13 +149,12 @@ class HexagonExample:
                     if event.key == K_ESCAPE:
                         return                
                     elif event.key == K_SPACE:
-
-                        #tStart = time.clock()
-                        self.mMap.cache.getPath((0,0),(3,2))
-                        #print time.clock() - tStart
-                        
+                        pass
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
+                elif event.type == MOUSEBUTTONDOWN:
+                    if event.button == 4 or event.button == 5:
+                        self.zoom(event.button)
     
             # DRAWING             
             self.screen.blit(self.mapimg, (0,0)) 

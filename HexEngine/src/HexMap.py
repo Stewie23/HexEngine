@@ -19,7 +19,8 @@ class Map:
         self.side  = 0
         self.tiles = [] #two dimensional array storring the tiles
                         #acess is[y][x] 
-        self.cache = None               
+        self.cache = None   
+                    
     def LoadMap(self):
         #simple load the debug.map and parse it to draw map    
         map = open('map/debug.map','r')
@@ -48,8 +49,7 @@ class Map:
                         
                     n+=1
             count+= 1
-            
-                
+                            
     def calcDimensions(self):
         self.height = int(self.radius * math.sqrt(3))
         self.side = int(self.radius * 3/2.0)
@@ -159,7 +159,10 @@ class Map:
                 if HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) <= maxDistance and HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) >= minDistance:
                     rtrList.append((tile.x,tile.y))
         return rtrList
-          
+     
+    def getRadius(self):
+        return self.radius
+         
     def getPath(self,StartPos,GoalPos):#A* Pathfinding 
         StartPos = (StartPos[0]+1,StartPos[1])#+1 for dummy col
         dirs = 6
@@ -286,8 +289,7 @@ class Map:
                     #weight view difficulty
                     opacity = round((self.getTile(tile[1]).opacity * d1 + self.getTile(tile[2]).opacity * d2),2)
                     rtrOpacity += opacity
-            #print (element,rtrOpacity)   
-             
+            #print (element,rtrOpacity)                
     def getFovB(self,Pos,Range):
         #hopfully faster:)
         TotalTiles = self.getTilesbyDistance(Pos,Range)
@@ -337,7 +339,17 @@ class Map:
                         rtrOpacity += self.InterpolateOpacity(Pos,element,tile[1],tile[2])
             ReturnList.append((tile[1],rtrOpacity))
         print ReturnList   
-                          
+   
+    def changeRadius(self,Radius):   
+        self.radius = Radius
+        self.calcDimensions()
+        #change tiles
+        iX = 1
+        iY = 0      
+        while iX < self.x:
+            for iY in range(self.y):
+                self.getTile((iX,iY)).recaluclateDimensions()
+            iX+=1            
     def InterpolateOpacity(self,Start,End,Tile1,Tile2):
         start = self.getTile(Start).center
         end = self.getTile(End).center
@@ -401,6 +413,7 @@ class Map:
         return rtrList
 
 class Tile:
+    
     def __init__(self,x,y,typ,map):
         self.map = map
         #array position
@@ -418,9 +431,6 @@ class Tile:
         self.center = self.setCenter()
         self.pointlist = self.setPoints()
         self.getCenterInt= (int(self.center[0]),int(self.center[1]))
-
-
-    
   
     def getOpacity(self):
         if self.typ == 1:
@@ -431,6 +441,7 @@ class Tile:
             return 0.75
         else:
             return 0.0 
+        
     def setCenter(self):#calculate the center pixel of a hex
         if self.y % 2: #ungrade
             x = int((self.x +1) * self.map.height)
@@ -466,20 +477,27 @@ class Tile:
             rtrList.append((int(cornerX[i] + PixelX),cornerY[i] + PixelY))
             i += 1
         return rtrList
+ 
+    def recaluclateDimensions(self):
+        self.center = self.setCenter()
+        self.pointlist = self.setPoints()
         
 class node: #class for pathfinding
     xPos = 0
     yPos = 0
     distance = 0
     priority = 0
+    
     def __init__(self, xPos, yPos, distance, priority,cost):
         self.xPos = xPos
         self.yPos = yPos
         self.cost = cost
         self.distance = distance
         self.priority = priority
+        
     def __lt__(self,other):
         return self.priority < other.priority
+    
     def updatePriority(self, xDest, yDest,H=True):
         if H == True:
             self.priority = self.distance + self.estimate(xDest, yDest)  #*n, n >= 1 higher h -> faster search, supoptimal path
@@ -491,6 +509,7 @@ class node: #class for pathfinding
                                         
     def nextMove(self):
         self.distance += self.cost
+        
     def estimate(self, xDest, yDest):
         #convert to Hex Coordinate for easier calculation
         a = HexMath.convertArrayToHex(self.xPos,self.yPos)
