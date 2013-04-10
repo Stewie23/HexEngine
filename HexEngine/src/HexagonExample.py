@@ -157,8 +157,7 @@ class HexagonExample:
 
         self.init()
 
-        clock = pygame.time.Clock()
-        x = 0             
+        clock = pygame.time.Clock()             
         while 1:
             clock.tick(30)
                                                                          

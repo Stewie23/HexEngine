@@ -360,7 +360,6 @@ class Map:
         self.offsetX += Offset[0]
         self.offsetY += Offset[1]
         self.calcDimensions()
-        print (self.offsetX,self.offsetY)
         #change tiles
         iX = 1
         iY = 0      
