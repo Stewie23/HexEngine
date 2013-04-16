@@ -122,15 +122,17 @@ class HexagonExample:
         path = self.mMap.getPath((0,0), HexMath.ScreenToHex(x, y,self.mMap.radius))
         self.HighlightMutipleHex(path)
     
-    def zoom(self,button):
+    def zoom(self,button,pos):
         #handles zoom button 4 is mousewheel up, button 5 is mousewheel down
         if button == 4:
             self.mMap.changeRadius(self.mMap.getRadius() + 5)
-            self.drawMap()
         if button == 5:
             if self.mMap.getRadius() -5 > 0: #check so radius is bigger then 0
                 self.mMap.changeRadius(self.mMap.getRadius() - 5)
-                self.drawMap()
+     
+        #calculate offset so hex under the cursor is centred
+        hPos = HexMath.ScreenToHex(pos[0],pos[1],self.mMap.radius)
+        self.centerScreenOnHex(hPos[0], hPos[1])
       
     def scroll(self,mousePos):
         #check if mouse position is on the edge of the screen
@@ -150,8 +152,27 @@ class HexagonExample:
             self.mMap.changeOffset((x,y))
             self.drawMap()
         
+    def centerScreenOnHex(self,x,y):
+        try:
+            tileCenter = self.mMap.getTile((int(x),int(y))).center
+        except:
+            return False
         
-    
+        ScreenCenter = (320,240)
+        
+        print tileCenter 
+        xOffset = (ScreenCenter[0] - tileCenter[0]) 
+        yOffset = (ScreenCenter[1] - tileCenter[1]) 
+  
+       
+        
+        
+        self.mMap.setOffset((xOffset,yOffset))
+        self.drawMap()
+        
+        print self.mMap.getTile((int(x),int(y))).center
+        print xOffset,yOffset
+             
     def mainLoop(self):    
         pygame.init()    
 
@@ -174,7 +195,7 @@ class HexagonExample:
                     self.scroll(event.pos)
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4 or event.button == 5:
-                        self.zoom(event.button)
+                        self.zoom(event.button,event.pos)
     
             # DRAWING             
             self.screen.blit(self.mapimg, (0,0)) 
