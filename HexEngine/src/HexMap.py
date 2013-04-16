@@ -21,8 +21,7 @@ class Map:
                         #acess is[y][x] 
         self.offsetX = 0
         self.offsetY = 0
-        
-                    
+                            
     def LoadMap(self):
         #simple load the debug.map and parse it to draw map    
         map = open('map/debug.map','r')
@@ -166,7 +165,7 @@ class Map:
         return self.radius
        
     def getOffset(self):
-        return self.offset
+        return (self.offsetX,self.offsetY)
       
     def getPath(self,StartPos,GoalPos):#A* Pathfinding 
         StartPos = (StartPos[0]+1,StartPos[1])#+1 for dummy col
@@ -359,7 +358,6 @@ class Map:
     def changeOffset(self,Offset):
         self.offsetX += Offset[0]
         self.offsetY += Offset[1]
-        self.calcDimensions()
         #change tiles
         iX = 1
         iY = 0      
@@ -367,7 +365,18 @@ class Map:
             for iY in range(self.y):
                 self.getTile((iX,iY)).recaluclateDimensions()
             iX+=1          
-              
+     
+    def setOffset(self,Offset):  
+        self.offsetX = Offset[0]
+        self.offsetY = Offset[1]
+        #change tiles
+        iX = 1
+        iY = 0      
+        while iX < self.x:
+            for iY in range(self.y):
+                self.getTile((iX,iY)).recaluclateDimensions()
+            iX+=1     
+                  
     def InterpolateOpacity(self,Start,End,Tile1,Tile2):
         start = self.getTile(Start).center
         end = self.getTile(End).center
