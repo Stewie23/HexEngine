@@ -159,6 +159,7 @@ class Map:
             for tile in row:
                 if HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) <= maxDistance and HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) >= minDistance:
                     rtrList.append((tile.x,tile.y))
+            
         return rtrList
      
     def getRadius(self):
@@ -274,6 +275,7 @@ class Map:
     def getFov(self,Pos,Range):
         #rather slow lot of overhead,needs to work with 120 tiles
         List = self.getTilesbyDistance(Pos,Range,minDistance=1)
+        
         
         for element in List:
             rtrOpacity = 0
@@ -416,10 +418,8 @@ class Map:
             return(next1,next2)
                     
         
-                    
-       
-        
         while cur1 != goalTile: 
+           
             next1 = None
             next2 = None   
             next1,next2 = nextHexes(next1,next2,cur1,cur2)

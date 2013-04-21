@@ -28,10 +28,7 @@ class HexagonExample:
             
         pygame.gfxdraw.filled_polygon(self.mapimg,Tile.pointlist,bgcolor)
         pygame.draw.aalines(self.mapimg, color,False, Tile.pointlist,1)
-        
-        #show location in the middel probeblay somehting for debug
-        #pygame.draw.circle(self.mapimg,color,Tile.center,2,0)
-   
+          
     def drawMap(self):
         self.mapimg = pygame.Surface((640,480),1)
         self.mapimg= self.mapimg.convert()
@@ -42,12 +39,7 @@ class HexagonExample:
             for iY in range(self.mMap.y):
                 self.drawHex(self.mMap.getTile((iX,iY)))
             iX+=1
-        #debug: highlight middle of screen
-        color = pygame.Color(250,250,250,250)
-        pos = (320,240)
-        pygame.draw.circle(self.mapimg,color,pos,5,0)
-        #end debug
-        
+       
     def HighlightHex(self,ArrayCord): 
         #rebuild this, hex cords are now stored in tile
         #highlight the selected hex
@@ -152,8 +144,7 @@ class HexagonExample:
      
         #Center View on HexTile
         self.centerScreenOnHex(hPos[0], hPos[1])
-       
-      
+            
     def scroll(self,mousePos):
         #check if mouse position is on the edge of the screen
         x = 0
@@ -185,9 +176,7 @@ class HexagonExample:
   
         self.mMap.setOffset((xOffset,yOffset))
         self.drawMap()
-        
-       
-             
+                     
     def mainLoop(self):    
         pygame.init()    
 
@@ -204,13 +193,15 @@ class HexagonExample:
                     if event.key == K_ESCAPE:
                         return                
                     elif event.key == K_SPACE:
-                        pass
+                        pass 
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
                     self.scroll(event.pos)
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4 or event.button == 5:
                         self.zoom(event.button,event.pos)
+
+                        
     
             # DRAWING             
             self.screen.blit(self.mapimg, (0,0)) 

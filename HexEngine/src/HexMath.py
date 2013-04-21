@@ -9,8 +9,6 @@ and second line offset to the right)
 import math
 import time
 
-
-
 def convertArrayToHex(x,y):
     returnX = int(x - math.floor(y/2.0))
     returnY = int(x + math.ceil(y/2.0))
