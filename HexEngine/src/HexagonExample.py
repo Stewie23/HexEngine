@@ -40,7 +40,12 @@ class HexagonExample:
             for iY in range(self.mMap.y):
                 self.drawHex(self.mMap.getTile((iX,iY)))
             iX+=1
-                           
+        #debug: highlight middle of screen
+        color = pygame.Color(250,250,250,250)
+        pos = (320,240)
+        pygame.draw.circle(self.mapimg,color,pos,5,0)
+        #end debug
+        
     def HighlightHex(self,ArrayCord): 
         #rebuild this, hex cords are now stored in tile
         #highlight the selected hex
@@ -50,9 +55,9 @@ class HexagonExample:
         #check if cord is in grid
         if HexMath.checkInGrid(ArrayCord[0],ArrayCord[1],self.mMap.x,self.mMap.y):
             radius = self.mMap.radius
-            height = radius * math.sqrt(3)
-            side = radius * 3/2
-            width = radius * 2
+            height = self.mMap.height
+            side = self.mMap.side
+            width = self.mMap.width
         
             cornerX = [height/2,height,height,height/2,0,0]
             cornerY = [0,radius/2,side,width,side,radius/2]
@@ -77,9 +82,9 @@ class HexagonExample:
         for hex in HexList:
             if HexMath.checkInGrid(hex[0],hex[1],self.mMap.x,self.mMap.y):
                 radius = self.mMap.radius
-                height = radius * math.sqrt(3)
-                side = radius * 3/2
-                width = radius * 2
+                height = self.mMap.height
+                side = self.mMap.side
+                width = self.mMap.width
             
                 cornerX = [height/2,height,height,height/2,0,0]
                 cornerY = [0,radius/2,side,width,side,radius/2]
@@ -113,26 +118,39 @@ class HexagonExample:
         #another surface for pathfinding visualisation
         self.pathfind = pygame.Surface((640,480),SRCALPHA)
         self.highlight.fill((0,0,0,0))
-               
+        
+        self.centerScreenOnHex(5,4)
+                      
     def setCursor(self,x,y):
+        #addjust for offset of the hex grid
+        x -= self.mMap.offsetX
+        y -= self.mMap.offsetY
+    
         self.HighlightHex(HexMath.ScreenToHex(x, y,self.mMap.radius))
         #set screen caption for debug purpose
-        pygame.display.set_caption(str(HexMath.ScreenToHex(x, y,self.mMap.radius)))
+        pygame.display.set_caption(str(HexMath.ScreenToHex(x,y,self.mMap.radius)))
         
         path = self.mMap.getPath((0,0), HexMath.ScreenToHex(x, y,self.mMap.radius))
         self.HighlightMutipleHex(path)
     
     def zoom(self,button,pos):
+        #Calculate HexTile under MouseCursor
+        posX = pos[0] - self.mMap.offsetX
+        posY = pos[1] - self.mMap.offsetY
+        hPos = HexMath.ScreenToHex(posX,posY,self.mMap.radius)
+        
         #handles zoom button 4 is mousewheel up, button 5 is mousewheel down
         if button == 4:
             self.mMap.changeRadius(self.mMap.getRadius() + 5)
+            self.drawMap()
         if button == 5:
             if self.mMap.getRadius() -5 > 0: #check so radius is bigger then 0
                 self.mMap.changeRadius(self.mMap.getRadius() - 5)
+                self.drawMap()
      
-        #calculate offset so hex under the cursor is centred
-        hPos = HexMath.ScreenToHex(pos[0],pos[1],self.mMap.radius)
+        #Center View on HexTile
         self.centerScreenOnHex(hPos[0], hPos[1])
+       
       
     def scroll(self,mousePos):
         #check if mouse position is on the edge of the screen
@@ -160,18 +178,13 @@ class HexagonExample:
         
         ScreenCenter = (320,240)
         
-        print tileCenter 
         xOffset = (ScreenCenter[0] - tileCenter[0]) 
         yOffset = (ScreenCenter[1] - tileCenter[1]) 
   
-       
-        
-        
         self.mMap.setOffset((xOffset,yOffset))
         self.drawMap()
         
-        print self.mMap.getTile((int(x),int(y))).center
-        print xOffset,yOffset
+       
              
     def mainLoop(self):    
         pygame.init()    
