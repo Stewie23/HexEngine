@@ -170,24 +170,18 @@ def hexintersectsInfinitline(tile,startTile,endTile):
     side1 = turns(startTile.center[0],startTile.center[1],
                   endTile.center[0],endTile.center[1],
                   tile.center[0],tile.center[1])
-    print "------"
-    print startTile.center
-    print endTile.center
-    print tile.center[0],tile.center[1]
-    print "--------"
-    print ("side1:",side1)
     if side1 == 0:
         return 1 # hex is straight on the line
     for side in tile.pointlist:
         j = turns(startTile.center[0],startTile.center[1],
                   endTile.center[0],endTile.center[1],
                   side[0],side[1]) 
-        print side[0],side[1],j
         if j == 0 or j!= side1:
             return 1
     return 0
     
 def hexintersectsline(tile,startTile,endTile):
+    #Bugged!, probably because of bounding rectangle
     #hex is intersected if it lies on the line
     #or one of its points lies on the opposite side as side1 
     #ignore points outside startTile.center -> goalTile.center
@@ -197,28 +191,29 @@ def hexintersectsline(tile,startTile,endTile):
     y1 = 0
     y2 = 0
     if startTile.center[0] < endTile.center[0]:
-        x1 = startTile.center[0]
-        x2 = endTile.center[0]
+        x1 = startTile.center[0] 
+        x2 = endTile.center[0]  
     elif startTile.center > endTile.center[0]:
         x1 = endTile.center[0]
-        x2 = startTile.center[0]
+        x2 = startTile.center[0] 
         
     if startTile.center[1] < endTile.center[1]:
-        y1 = startTile.center[1]
-        y2 = endTile.center[1]
+        y1 = startTile.center[1] 
+        y2 = endTile.center[1]  
     elif startTile.center > endTile.center[1]:
-        y1 = endTile.center[1]
-        y2 = startTile.center[1]
-             
-    side1 = turns(startTile.center[0],startTile.center[1],endTile.center[0],endTile.center[1],tile.center[0],tile.center[1])
+        y1 = endTile.center[1] 
+        y2 = startTile.center[1] 
+              
+    side1 = turns(startTile.center[0],startTile.center[1],
+                  endTile.center[0],endTile.center[1],
+                  tile.center[0],tile.center[1])
 
-    
     if tile.center[0] >= x1 and tile.center[0] <= x2 and tile.center[1] >= y1 and tile.center[1] <= y2: 
         if side1 == 0:
             return 1 # hex is straight on the line
         
     for side in tile.pointlist:
-        if side[0] >= x1 and side[0] <= x2 and side[1] >= y1 and side[1] <= y2:
+        if side[0] >= x1 and side[0] <= x2 and side[1] >= y1 and side[1] <= y2:  
             j = turns(startTile.center[0],startTile.center[1],
                   endTile.center[0],endTile.center[1],
                   side[0],side[1])  

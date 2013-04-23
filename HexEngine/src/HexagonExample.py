@@ -10,7 +10,6 @@ import cProfile
 
 class HexagonExample:
          
-
     def drawHex(self,Tile):
         """
         Draw the tiles.
@@ -193,7 +192,7 @@ class HexagonExample:
                     if event.key == K_ESCAPE:
                         return                
                     elif event.key == K_SPACE:
-                        pass 
+                        self.mMap.getFov((1,0),10)
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
                     self.scroll(event.pos)
@@ -208,7 +207,7 @@ class HexagonExample:
             self.screen.blit(self.pathfind,(0,0))
             self.screen.blit(self.highlight,(0,0))
             pygame.display.flip()
-            
+             
 def main():
     g = HexagonExample()
     g.mainLoop()

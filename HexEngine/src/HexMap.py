@@ -157,7 +157,9 @@ class Map:
         
         for row in self.tiles:
             for tile in row:
-                if HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) <= maxDistance and HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) >= minDistance:
+                if HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) <= maxDistance \
+                and HexMath.getDistance(Pos[0],Pos[1],tile.x,tile.y) >= minDistance \
+                and tile.x > 0 and tile.x < self.x:
                     rtrList.append((tile.x,tile.y))
             
         return rtrList
@@ -274,78 +276,17 @@ class Map:
       
     def getFov(self,Pos,Range):
         #rather slow lot of overhead,needs to work with 120 tiles
-        List = self.getTilesbyDistance(Pos,Range,minDistance=1)
-        
-        
-        for element in List:
-            rtrOpacity = 0
-            intersected = self.intersectingline(self.getTile(Pos),self.getTile(element))
-            for tile in intersected:
-                if tile[0] == 1: #line did just intercept one tile so add seeing difficulty
-                    rtrOpacity += self.getTile(tile[1]).opacity
-                else: #two hexes intercepted, calculate mean difficulty weighted by distance
-                    start = self.getTile(Pos).center
-                    end = self.getTile(element).center
-                    point = self.getTile(tile[1]).center
-                    d1 = HexMath.distancefromLine(start[0],start[1],end[0],end[1], point[0], point[1])
-                    point = self.getTile(tile[2]).center
-                    d2 = HexMath.distancefromLine(start[0],start[1],end[0],end[1], point[0], point[1])
-                    d1 = round((d1/float((d1+d2))),2) #percentage distance for d1
-                    d2 = round(1.0 - d1,2) # precentage distance for d2
-                    #weight view difficulty
-                    opacity = round((self.getTile(tile[1]).opacity * d1 + self.getTile(tile[2]).opacity * d2),2)
-                    rtrOpacity += opacity
-            #print (element,rtrOpacity)                
-    def getFovB(self,Pos,Range):
-        #hopfully faster:)
-        TotalTiles = self.getTilesbyDistance(Pos,Range)
-        EndTiles = self.getTilesbyDistance(Pos,Range,minDistance=Range)
-        ReturnList = []                           
-        for element in EndTiles: #start from the end tiles  
-            rtrOpacity = 0
-            intersected = self.intersectingline(self.getTile(Pos),self.getTile(element))
-            switch = True 
-            for tile in intersected: 
-                #as long as one tile has been used los to current tile has been calculated
-                #if two tiles have been used variation is possible
-                if tile[0] == 1: #line did just intercept one tile so add seeing difficulty
-                    if rtrOpacity < 1:
-                        rtrOpacity += self.getTile(tile[1]).opacity
-                    if switch == True:
-                        try:
-                            TotalTiles.remove(tile[1])
-                            ReturnList.append((tile[1],rtrOpacity))
-                        except:
-                            pass #tile already removed, do nothing 
-                else:
-                    switch = False
-                    if rtrOpacity < 1:
-                        rtrOpacity += self.InterpolateOpacity(Pos,element,tile[1],tile[2])
-                    else:
-                        try:
-                            TotalTiles.remove(tile[1])
-                            ReturnList.append((tile[1],rtrOpacity))
-                        except:
-                            pass #tile already removed, do nothing 
-            try:
-                TotalTiles.remove(tile[1])
-                ReturnList.append((tile[1],rtrOpacity))
-            except:
-                pass #tile already removed, do nothing 
-        
-        for element in TotalTiles:#calculate rest
-            rtrOpacity = 0
-            intersected = self.intersectingline(self.getTile(Pos),self.getTile(element))
-            for tile in intersected:
-                if tile[0] == 1: #line did just intercept one tile so add seeing difficulty
-                    if rtrOpacity < 1:
-                        rtrOpacity += self.getTile(tile[1]).opacity
-                else: #two hexes intercepted, calculate mean difficulty weighted by distance
-                    if rtrOpacity < 1:
-                        rtrOpacity += self.InterpolateOpacity(Pos,element,tile[1],tile[2])
-            ReturnList.append((tile[1],rtrOpacity))
-        print ReturnList   
-   
+        List = self.getTilesbyDistance(Pos,Range,minDistance=1)   
+        for Tile in List:
+            rtrOpacity = 0   
+            intersected = self.intersectingline(self.getTile(Pos), self.getTile(Tile))
+            for element in intersected:
+                if len(element) == 1:
+                    rtrOpacity += self.getTile(element[0]).opacity
+                else: # line goes trough two tiles
+                    rtrOpacity += self.InterpolateOpacity(Pos,Tile, element[0], element[1])
+            print Tile,rtrOpacity
+                    
     def changeRadius(self,Radius):   
         self.radius = Radius
         self.calcDimensions()
@@ -390,55 +331,36 @@ class Map:
         d2 = round(1.0 - d1,2) # precentage distance for d2
         #weight view difficulty
         return round((self.getTile(Tile1).opacity * d1 + self.getTile(Tile2).opacity * d2),2)
-                                                 
-    def intersectingline(self,startTile,goalTile):   #returns a list of hext tiles intersected by a line 
-        #still bug probably rounding problems 
+     
+    def intersectingline(self,startTile,goalTile):
+        searchedSet = set()
+        returnLst = []
+        workingLst = []
+        tmpLst =[]
         
-        cur1 = startTile
-        cur2 = None
-        last1 = None
-        last2 = None
-        next1 = None
-        next2 = None
-        
-        
-        rtrList = []
-
-        def nextHexes(next1,next2,cur,cur2):
-            h = HexMath.getNeighbours(cur.x,cur.y,self.x,self.y)
-            for pos in h:
-                #check if hex is intersected by line,still some bugs
-                tile = self.getTile(pos)
-                n = HexMath.hexintersectsline(tile,startTile,goalTile)
-                if n == 1 and tile != last1 and tile != last2 and tile != cur and tile!= cur2 and tile != next1 and tile!=next2:
-                    if next1 == None:
-                        next1 = tile
-                    elif next2 == None:
-                        next2 = tile
-            return(next1,next2)
-                    
-        
-        while cur1 != goalTile: 
-           
-            next1 = None
-            next2 = None   
-            next1,next2 = nextHexes(next1,next2,cur1,cur2)
+        goal = (goalTile.x,goalTile.y)
+        tmpLst.append((startTile.x,startTile.y))
+        workingLst.append((startTile.x,startTile.y))
+        searchedSet.add((startTile.x,startTile.y))
+        returnLst.append(tmpLst)
+        tmpLst = []
+        while True:
+            for Tuble in workingLst:
+                if Tuble == goal:
+                    return returnLst
+            neigbourLst = HexMath.getNeighbours(Tuble[0],Tuble[1],self.x, self.y)
+            workingLst.remove(Tuble)
             
-            if cur2 != None:
-                next1,next2 = nextHexes(next1,next2,cur2,cur1)
-                rtrList.append((2,(cur1.x,cur1.y),(cur2.x,cur2.y)))
-            else:
-                rtrList.append((1,(cur1.x,cur1.y)))
-            last1 = cur1
-            last2 = cur2
-            cur1 = next1
-            cur2 = next2
-            
-    
-            
-        rtrList.append((1,(cur1.x,cur1.y)))
-        return rtrList
-
+            for element in neigbourLst:
+                if element not in searchedSet:
+                    if HexMath.hexintersectsline(self.getTile(element), startTile, goalTile) == 1:
+                        workingLst.append(element)
+                        tmpLst.append(element)
+                searchedSet.add(element) 
+                
+            returnLst.append(tmpLst)
+            tmpLst = []        
+                   
 class Tile:
     
     def __init__(self,x,y,typ,map):
@@ -470,11 +392,11 @@ class Tile:
         
     def setCenter(self):#calculate the center pixel of a hex
         if self.y % 2: #ungrade
-            x = int((self.x +1) * self.map.height)
+            x = int((self.x +1) * self.map.height + self.map.offsetX)
         else: #grade
-            x = int( self.x * self.map.height + self.map.height/2.0) 
+            x = int( self.x * self.map.height + self.map.height/2.0 + self.map.offsetX) 
             
-        y = int(self.y * self.map.side + self.map.radius) 
+        y = int(self.y * self.map.side + self.map.radius + self.map.offsetY ) 
         
         return(x,y)
     
@@ -504,8 +426,8 @@ class Tile:
         return rtrList
  
     def recaluclateDimensions(self):
-        self.center = self.setCenter()
         self.pointlist = self.setPoints()
+        self.center = self.setCenter()
         
 class node: #class for pathfinding
     xPos = 0
