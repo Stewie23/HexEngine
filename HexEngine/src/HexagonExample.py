@@ -163,9 +163,7 @@ class HexagonExample:
             self.drawMap()
         
     def centerScreenOnHex(self,x,y):
-    
-        tileCenter = self.mMap.getTile((int(x),int(y))).center
-         
+             
         ScreenCenter = (320,240)
         
         tileCenter = self.mMap.getTile((int(x),int(y))).center
