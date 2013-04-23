@@ -163,16 +163,20 @@ class HexagonExample:
             self.drawMap()
         
     def centerScreenOnHex(self,x,y):
-        try:
-            tileCenter = self.mMap.getTile((int(x),int(y))).center
-        except:
-            return False
-        
+    
+        tileCenter = self.mMap.getTile((int(x),int(y))).center
+         
         ScreenCenter = (320,240)
         
-        xOffset = (ScreenCenter[0] - tileCenter[0]) 
-        yOffset = (ScreenCenter[1] - tileCenter[1]) 
-  
+        tileCenter = self.mMap.getTile((int(x),int(y))).center
+        offset = self.mMap.getOffset()
+        
+        tileCenterX = tileCenter[0] - offset[0]
+        tileCenterY = tileCenter[1] - offset[1]
+        
+        xOffset = (ScreenCenter[0] - tileCenterX)
+        yOffset = (ScreenCenter[1] - tileCenterY)
+     
         self.mMap.setOffset((xOffset,yOffset))
         self.drawMap()
                      
