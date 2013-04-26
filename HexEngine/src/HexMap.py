@@ -284,6 +284,7 @@ class Map:
         for Tile in List:
             rtrOpacity = 0   
             intersected = self.intersectingline(self.getTile(Pos), self.getTile(Tile))
+            intersected.pop(0) #remove our position
             for element in intersected:
                 if len(element) == 1:
                     rtrOpacity += self.getTile(element[0]).opacity
