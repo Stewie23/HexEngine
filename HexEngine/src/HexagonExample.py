@@ -27,6 +27,9 @@ class HexagonExample:
             
         pygame.gfxdraw.filled_polygon(self.mapimg,Tile.pointlist,bgcolor)
         pygame.draw.aalines(self.mapimg, color,False, Tile.pointlist,1)
+        
+        
+        self.mapimg.blit(Tile.caption,Tile.center)
           
     def drawMap(self):
         self.mapimg = pygame.Surface((640,480),1)
@@ -102,7 +105,13 @@ class HexagonExample:
         """
         self.screen = pygame.display.set_mode((640, 480),1)
         pygame.display.set_caption('HexEngine')
+        #set up font
+        TileFont = pygame.font.Font(None,15)
+        
         self.mMap = HexMap.Map()
+        color = pygame.Color(250,250, 250, 250)
+        self.mMap.setFont(TileFont,color)
+        
         self.mMap.LoadMap()
         self.drawMap()        
         #create transparent surface for higlight
@@ -113,6 +122,7 @@ class HexagonExample:
         self.highlight.fill((0,0,0,0))
         
         self.centerScreenOnHex(5,4)
+      
                       
     def setCursor(self,x,y):
         #addjust for offset of the hex grid
@@ -194,7 +204,11 @@ class HexagonExample:
                     if event.key == K_ESCAPE:
                         return                
                     elif event.key == K_SPACE:
-                        self.mMap.getFov((1,0),10)
+                        for Entry in self.mMap.getFov((5,4),4):
+                            Pos = Entry[0]
+                            self.mMap.getTile(Entry[0]).setCaption(str(Entry[1]))
+                        self.drawMap()
+                
                 elif event.type == MOUSEMOTION:
                     self.setCursor(event.pos[0],event.pos[1])
                     self.scroll(event.pos)

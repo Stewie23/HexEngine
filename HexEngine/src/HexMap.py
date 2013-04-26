@@ -8,6 +8,7 @@ from heapq import heappush, heappop
 from operator import itemgetter
 import math
 import HexMath
+
 class Map:
     
     def __init__(self):
@@ -21,7 +22,9 @@ class Map:
                         #acess is[y][x] 
         self.offsetX = 0
         self.offsetY = 0
-                            
+            
+        self.font = None
+        self.color = None            
     def LoadMap(self):
         #simple load the debug.map and parse it to draw map    
         map = open('map/debug.map','r')
@@ -276,7 +279,8 @@ class Map:
       
     def getFov(self,Pos,Range):
         #rather slow lot of overhead,needs to work with 120 tiles
-        List = self.getTilesbyDistance(Pos,Range,minDistance=1)   
+        List = self.getTilesbyDistance(Pos,Range,minDistance=1) 
+        rtrList =[]  
         for Tile in List:
             rtrOpacity = 0   
             intersected = self.intersectingline(self.getTile(Pos), self.getTile(Tile))
@@ -285,7 +289,8 @@ class Map:
                     rtrOpacity += self.getTile(element[0]).opacity
                 else: # line goes trough two tiles
                     rtrOpacity += self.InterpolateOpacity(Pos,Tile, element[0], element[1])
-            print Tile,rtrOpacity
+            rtrList.append((Tile,rtrOpacity))
+        return rtrList
                     
     def changeRadius(self,Radius):   
         self.radius = Radius
@@ -360,7 +365,11 @@ class Map:
                 
             returnLst.append(tmpLst)
             tmpLst = []        
-                   
+  
+    def setFont(self,font,color):
+        self.font = font
+        self.color = color
+        
 class Tile:
     
     def __init__(self,x,y,typ,map):
@@ -379,7 +388,15 @@ class Tile:
         self.center = self.setCenter()
         self.pointlist = self.setPoints()
         self.getCenterInt= (int(self.center[0]),int(self.center[1]))
-  
+        #caption
+        
+        self.caption = None
+        self.setCaption((str(self.x)+"," + str(self.y)))
+        
+    def setCaption(self,caption):
+        
+        self.caption = self.map.font.render(caption,1,self.map.color)
+        
     def getOpacity(self):
         if self.typ == 1:
             return 0.0
