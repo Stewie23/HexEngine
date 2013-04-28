@@ -285,11 +285,14 @@ class Map:
             rtrOpacity = 0   
             intersected = self.intersectingline(self.getTile(Pos), self.getTile(Tile))
             intersected.pop(0) #remove our position
+            print Tile,intersected
             for element in intersected:
                 if len(element) == 1:
                     rtrOpacity += self.getTile(element[0]).opacity
-                else: # line goes trough two tiles
+                elif len(element) ==2: # line goes trough two tiles
                     rtrOpacity += self.InterpolateOpacity(Pos,Tile, element[0], element[1])
+                else: #some elements are empty, otherwise crash
+                    pass 
             rtrList.append((Tile,rtrOpacity))
         return rtrList
                     
