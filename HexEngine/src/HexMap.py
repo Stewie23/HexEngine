@@ -285,7 +285,6 @@ class Map:
             rtrOpacity = 0   
             intersected = self.intersectingline(self.getTile(Pos), self.getTile(Tile))
             intersected.pop(0) #remove our position
-            print Tile,intersected
             for element in intersected:
                 if len(element) == 1:
                     rtrOpacity += self.getTile(element[0]).opacity

@@ -205,7 +205,6 @@ class HexagonExample:
                         return                
                     elif event.key == K_SPACE:
                         for Entry in self.mMap.getFov((5,4),6):
-                            Pos = Entry[0]
                             self.mMap.getTile(Entry[0]).setCaption(str(Entry[1]))
                         self.drawMap()
                 
